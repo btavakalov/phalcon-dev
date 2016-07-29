@@ -87,6 +87,7 @@ docker run -d \
         --env POSTGRES_PASSWORD=123 \
         --env PGDATA=/storage/db \
         --volumes-from $APP_CONTAINER \
+        -p 5432:5432 \
         $POSTGRES_IMAGE
 
 sleep 10
