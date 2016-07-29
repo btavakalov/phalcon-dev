@@ -2,6 +2,7 @@
 git pull --all
 
 echo '******************************************************************************'
+#export IP=10.10.02.1
 export HOST_IP=$(ifconfig `netstat -nr | awk '{ if ($1 ~/default/) { print $6; exit } }'` | grep "inet " | awk '{ print $2 }')
 export GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
@@ -13,6 +14,9 @@ export NGINX_CONTAINER="phalcon-sandbox-nginx"
 
 export PHP_IMAGE="phalcon-sandbox-php"
 export PHP_CONTAINER="phalcon-sandbox-php"
+
+export POSTGRES_IMAGE="ironlion/postgres"
+export POSTGRES_CONTAINER="phalcon-sandbox-postgres"
 
 echo 'Setup vars'
 echo "GIT_BRANCH = $GIT_BRANCH"
@@ -55,6 +59,12 @@ docker stop $NGINX_CONTAINER
 docker rm $NGINX_CONTAINER
 
 echo '******************************************************************************'
+echo "* Stop & rm '$POSTGRES_CONTAINER' container"
+echo '******************************************************************************'
+docker stop $POSTGRES_CONTAINER
+docker rm $POSTGRES_CONTAINER
+
+echo '******************************************************************************'
 echo "* Stop & rm '$PHP_CONTAINER' container"
 echo '******************************************************************************'
 docker stop $PHP_CONTAINER
@@ -70,12 +80,25 @@ docker run \
         true
 
 echo '******************************************************************************'
+echo "* Run postgres container"
+echo '******************************************************************************'
+docker run -d \
+        --name $POSTGRES_CONTAINER \
+        --env POSTGRES_PASSWORD=123 \
+        --env PGDATA=/storage/db \
+        --volumes-from $APP_CONTAINER \
+        $POSTGRES_IMAGE
+
+sleep 10
+
+echo '******************************************************************************'
 echo "* Run '$PHP_CONTAINER' container"
 echo '******************************************************************************'
 docker run -d \
         --name $PHP_CONTAINER \
         --env XDEBUG_CONFIG="remote_host=$HOST_IP" \
         --volumes-from $APP_CONTAINER \
+        --link $POSTGRES_CONTAINER:postgres \
         $PHP_IMAGE
 
 echo '******************************************************************************'

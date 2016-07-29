@@ -6,4 +6,6 @@ WORKDIR /app
 
 VOLUME /app
 
+VOLUME /storage/db
+
 CMD /bin/sh
